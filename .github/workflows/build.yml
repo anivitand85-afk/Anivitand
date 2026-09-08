@@ -38,49 +38,30 @@ jobs:
         python -m pip install --upgrade pip setuptools
         python -m pip install "cython<3.0.0" buildozer
 
-    - name: Pre-configure Android SDK & Command-Line Tools
-      run: |
-        SDK_DIR="$HOME/.buildozer/android/platform/android-sdk"
-        mkdir -p "$SDK_DIR/cmdline-tools"
-        mkdir -p "$SDK_DIR/licenses"
-        
-        # Скачиваем официальный commandlinetools
-        wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O commandlinetools.zip
-        unzip -q commandlinetools.zip -d "$SDK_DIR/cmdline-tools"
-        mv "$SDK_DIR/cmdline-tools/cmdline-tools" "$SDK_DIR/cmdline-tools/latest"
-        rm commandlinetools.zip
-
-        # Создаем совместимый путь tools/bin/sdkmanager, который ищет Buildozer
-        mkdir -p "$SDK_DIR/tools/bin"
-        ln -s "$SDK_DIR/cmdline-tools/latest/bin/sdkmanager" "$SDK_DIR/tools/bin/sdkmanager"
-
-        # Лицензии Android SDK
-        echo -e "24833b2982365686222214314519807237389140\n89330d1709806eb19623011172f3679a22a4476e\n79322ba8426f5e9f5f6555b773c2378756410345" > "$SDK_DIR/licenses/android-sdk-license"
-        echo -e "84831b9409646a918e30573bab4c9c91346d8abd" > "$SDK_DIR/licenses/android-sdk-preview-license"
-        echo -e "d976f68513e1aed8052304651399b113ee520b12" > "$SDK_DIR/licenses/intel-android-sys-image-license"
-
     - name: Configure buildozer.spec
       run: |
         rm -f buildozer.spec
         buildozer init
 
-        # Лицензии и архитектура
+        # Разрешаем сборку и авто-принятие лицензий
         sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
         sed -i 's/android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
+        
+        # Сборка только под arm64
         sed -i 's/android.archs = arm64-v8a, armeabi-v7a/android.archs = arm64-v8a/' buildozer.spec
         
         # Зависимости
         sed -i 's/requirements = python3,kivy/requirements = python3,kivy/' buildozer.spec
         
-        # Фиксируем API и NDK версии, совместимые с Kivy
+        # Версии API и NDK
         sed -i 's/# android.api = .*/android.api = 33/' buildozer.spec
         sed -i 's/# android.minapi = .*/android.minapi = 24/' buildozer.spec
         sed -i 's/# android.ndk = .*/android.ndk = 25b/' buildozer.spec
-        sed -i 's/# android.build_tools_version = .*/android.build_tools_version = 33.0.2/' buildozer.spec
 
     - name: Build APK with Buildozer
       run: |
-        buildozer -v android debug
+        # Используем yes для автоматического согласия со всеми лицензиями SDK/NDK
+        yes | buildozer -v android debug
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
