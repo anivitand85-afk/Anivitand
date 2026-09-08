@@ -65,16 +65,16 @@ jobs:
         sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
         sed -i 's/android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
         sed -i 's/android.archs = arm64-v8a, armeabi-v7a/android.archs = arm64-v8a/' buildozer.spec
-        sed -i 's/requirements = python3,kivy/requirements = python3==3.11.5,kivy/' buildozer.spec
+        sed -i 's/requirements = python3,kivy/requirements = python3,kivy/' buildozer.spec
         
         sed -i 's/# android.api = .*/android.api = 33/' buildozer.spec
         sed -i 's/# android.minapi = .*/android.minapi = 24/' buildozer.spec
-        sed -i 's/# android.ndk = .*/android.ndk = 25b/' buildozer.spec
+        sed -i 's/# android.ndk_path = .*/android.ndk_path = ~\/_buildozer\/android\/platform\/android-ndk-r25b/' buildozer.spec
         sed -i 's/# android.build_tools_version = .*/android.build_tools_version = 33.0.2/' buildozer.spec
 
     - name: Build APK
       run: |
-        buildozer -v android debug
+        APP_ANDROID_NDK_HOME="$HOME/.buildozer/android/platform/android-ndk-r25b" buildozer -v android debug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
