@@ -41,24 +41,27 @@ jobs:
         python -m pip install --upgrade pip setuptools
         python -m pip install "cython<3.0.0" buildozer
 
-    - name: Configure buildozer.spec
+    - name: Clean old cache and generate clean spec
       run: |
-        if [ ! -f buildozer.spec ]; then
-          buildozer init
-        fi
+        # Удаляем старый кэш, из-за которого подтягивался NDK r28c
+        rm -rf .buildozer
+        rm -f buildozer.spec
         
-        # Автопринятие лицензий и базовые настройки
-        sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
+        # Создаем базовый spec
+        buildozer init
+        
+        # Принудительно настраиваем пути к установленному SDK и NDK 25b
         sed -i 's/android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
+        sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
         sed -i 's/android.archs = arm64-v8a, armeabi-v7a/android.archs = arm64-v8a/' buildozer.spec
         sed -i 's/requirements = python3,kivy/requirements = python3==3.11.5,kivy/' buildozer.spec
         
-        # Указываем Buildozer использовать уже установленный SDK/NDK
-        sed -i 's/# android.sdk_path = .*/android.sdk_path = \/usr\/local\/lib\/android\/sdk/' buildozer.spec
-        sed -i 's/# android.ndk_path = .*/android.ndk_path = \/usr\/local\/lib\/android\/sdk\/ndk\/25.2.9519653/' buildozer.spec
-        sed -i 's/# android.api = .*/android.api = 33/' buildozer.spec
-        sed -i 's/# android.minapi = .*/android.minapi = 24/' buildozer.spec
-        sed -i 's/# android.build_tools_version = .*/android.build_tools_version = 33.0.2/' buildozer.spec
+        # Прописываем пути к SDK/NDK
+        echo "android.sdk_path = /usr/local/lib/android/sdk" >> buildozer.spec
+        echo "android.ndk_path = /usr/local/lib/android/sdk/ndk/25.2.9519653" >> buildozer.spec
+        echo "android.api = 33" >> buildozer.spec
+        echo "android.minapi = 24" >> buildozer.spec
+        echo "android.build_tools_version = 33.0.2" >> buildozer.spec
 
     - name: Build APK
       run: |
