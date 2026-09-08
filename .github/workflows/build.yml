@@ -54,8 +54,8 @@ jobs:
     - name: Pre-accept SDK Licenses
       run: |
         mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
-        printf "24833b2982365686222214314519807237389140\n89330d1709806eb19623011172f3679a22a4476e\n79322ba8426f5e9f5f6555b773c2378756410345" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
-        printf "84831b9409646a918e30573bab4c9c91346d8abd" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-preview-license"
+        printf "24833b2982365686222214314519807237389140\n89330d1709806eb19623011172f3679a22a4476e\n79322ba8426f5e9f5f6555b773c2378756410345\n" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+        printf "84831b9409646a918e30573bab4c9c91346d8abd\n" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-preview-license
 
     - name: Build APK
       run: |
