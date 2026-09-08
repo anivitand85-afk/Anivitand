@@ -27,13 +27,20 @@ jobs:
         python -m pip install --upgrade pip setuptools
         python -m pip install "cython<3.0.0" buildozer
 
-    - name: Build APK
+    - name: Configure buildozer.spec
       run: |
         if [ ! -f buildozer.spec ]; then
           buildozer init
         fi
+        # Принятие лицензий и архитектура
         sed -i 's/#android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
         sed -i 's/android.archs = arm64-v8a, armeabi-v7a/android.archs = arm64-v8a/' buildozer.spec
+        
+        # Принудительно заменяем версии Kivy и Python для Android
+        sed -i 's/requirements = python3,kivy/requirements = python3==3.11.5,kivy/' buildozer.spec
+
+    - name: Build APK
+      run: |
         yes | buildozer -v android debug
 
     - name: Upload APK
