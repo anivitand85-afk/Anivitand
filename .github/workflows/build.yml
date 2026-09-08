@@ -32,16 +32,18 @@ jobs:
         if [ ! -f buildozer.spec ]; then
           buildozer init
         fi
-        # Принятие лицензий и архитектура
+        # Лицензия и архитектура
         sed -i 's/#android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
         sed -i 's/android.archs = arm64-v8a, armeabi-v7a/android.archs = arm64-v8a/' buildozer.spec
         
-        # Принудительно заменяем версии Kivy и Python для Android
+        # Фиксация версий Python, NDK и API для стабильности
         sed -i 's/requirements = python3,kivy/requirements = python3==3.11.5,kivy/' buildozer.spec
+        sed -i 's/# android.ndk = 25b/android.ndk = 25b/' buildozer.spec
+        sed -i 's/# android.api = 33/android.api = 33/' buildozer.spec
 
     - name: Build APK
       run: |
-        yes | buildozer -v android debug
+        buildozer -v android debug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
