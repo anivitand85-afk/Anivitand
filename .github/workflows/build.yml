@@ -17,41 +17,44 @@ jobs:
       with:
         python-version: '3.10'
 
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
     - name: Install system dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential libssl-dev libffi-dev python3-dev zip unzip openjdk-17-jdk autoconf libtool pkg-config cmake ninja-build ccache libncurses5-dev libncursesw5-dev libtinfo5
+        sudo apt-get install -y build-essential libssl-dev libffi-dev python3-dev zip unzip autoconf libtool pkg-config cmake ninja-build ccache libncurses5-dev libncursesw5-dev libtinfo5
 
     - name: Install Python tools
       run: |
         python -m pip install --upgrade pip setuptools
         python -m pip install "cython<3.0.0" buildozer
 
-    - name: Accept Android SDK Licenses
-      run: |
-        mkdir -p ~/.android
-        touch ~/.android/repositories.cfg
-        # Автоматический прием всех лицензий Android SDK
-        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
-
     - name: Configure buildozer.spec
       run: |
         if [ ! -f buildozer.spec ]; then
           buildozer init
         fi
-        # Принятие лицензий и базовые настройки
-        sed -i 's/#android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
-        sed -i 's/android.archs = arm64-v8a, armeabi-v7a/android.archs = arm64-v8a/' buildozer.spec
         
-        # Стабильные версии Python, API и NDK
+        # Принудительно задаем рабочие параметры и автопринятие лицензии
+        sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
+        sed -i 's/android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
+        sed -i 's/android.archs = arm64-v8a, armeabi-v7a/android.archs = arm64-v8a/' buildozer.spec
         sed -i 's/requirements = python3,kivy/requirements = python3==3.11.5,kivy/' buildozer.spec
-        sed -i 's/# android.build_tools_version = .*/android.build_tools_version = 34.0.0/' buildozer.spec
-        sed -i 's/# android.ndk = 25b/android.ndk = 25b/' buildozer.spec
-        sed -i 's/# android.api = 33/android.api = 33/' buildozer.spec
+        
+        # Фиксируем стабильные версии инструментов Android
+        sed -i 's/# android.api = .*/android.api = 33/' buildozer.spec
+        sed -i 's/# android.minapi = .*/android.minapi = 24/' buildozer.spec
+        sed -i 's/# android.ndk = .*/android.ndk = 25b/' buildozer.spec
+        sed -i 's/# android.build_tools_version = .*/android.build_tools_version = 33.0.2/' buildozer.spec
 
-    - name: Build APK
+    - name: Build APK with auto-accept
       run: |
-        buildozer -v android debug
+        # Автоматический отклик 'y' на все диалоги установок SDK/Build-Tools
+        yes | buildozer android debug || buildozer android debug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
