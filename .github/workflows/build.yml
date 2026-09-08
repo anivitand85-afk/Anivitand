@@ -20,17 +20,19 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential libssl-dev libffi-dev python3-dev zip unzip openjdk-17-jdk autoconf libtool pkg-config cmake ninja-build
+        sudo apt-get install -y build-essential libssl-dev libffi-dev python3-dev zip unzip openjdk-17-jdk autoconf libtool pkg-config cmake ninja-build ccache libncurses5-dev libncursesw5-dev libtinfo5
         pip install --upgrade pip
         pip install "cython<3.0.0" buildozer
 
-    - name: Init buildozer and set license
+    - name: Create or Update buildozer.spec
       run: |
         if [ ! -f buildozer.spec ]; then
           buildozer init
         fi
+        # Настройка основных параметров
         sed -i 's/#android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
         sed -i 's/android.archs = arm64-v8a, armeabi-v7a/android.archs = arm64-v8a/' buildozer.spec
+        sed -i 's/requirements = python3,kivy/requirements = python3,kivy/' buildozer.spec
 
     - name: Build APK
       run: |
