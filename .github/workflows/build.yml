@@ -11,6 +11,9 @@ jobs:
     container:
       image: kivy/buildozer:latest
 
+    env:
+      BUILD_OZER_ALLOW_KIVY_BUILD_ON_ROOT: 1
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -18,7 +21,7 @@ jobs:
     - name: Configure buildozer.spec
       run: |
         rm -f buildozer.spec
-        buildozer init
+        buildozer --warn_on_root init
 
         # Лицензии и архитектура
         sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
@@ -28,14 +31,14 @@ jobs:
         # Зависимости
         sed -i 's/requirements = python3,kivy/requirements = python3,kivy/' buildozer.spec
 
-        # Версии API
+        # Версии API и NDK
         sed -i 's/# android.api = .*/android.api = 33/' buildozer.spec
         sed -i 's/# android.minapi = .*/android.minapi = 24/' buildozer.spec
         sed -i 's/# android.ndk = .*/android.ndk = 25b/' buildozer.spec
 
     - name: Build APK
       run: |
-        yes | buildozer -v android debug
+        yes | buildozer --warn_on_root -v android debug
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
