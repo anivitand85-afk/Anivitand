@@ -23,49 +23,47 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Set up Android SDK
-      uses: android-actions/setup-android@v3
-
-    - name: Install NDK and Build-Tools
-      run: |
-        yes | sdkmanager --licenses
-        sdkmanager "build-tools;33.0.2" "ndk;25.2.9519653" "platforms;android-33"
-
     - name: Install system dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential libssl-dev libffi-dev python3-dev zip unzip autoconf libtool pkg-config cmake ninja-build ccache libncurses5-dev libncursesw5-dev libtinfo5
+        sudo apt-get install -y build-essential libssl-dev libffi-dev python3-dev zip unzip openjdk-17-jdk autoconf libtool pkg-config cmake ninja-build ccache libncurses5-dev libncursesw5-dev libtinfo5
 
     - name: Install Python tools
       run: |
         python -m pip install --upgrade pip setuptools
         python -m pip install "cython<3.0.0" buildozer
 
-    - name: Clean old cache and generate clean spec
+    - name: Create buildozer.spec and override settings
       run: |
-        # Удаляем старый кэш, из-за которого подтягивался NDK r28c
         rm -rf .buildozer
         rm -f buildozer.spec
-        
-        # Создаем базовый spec
         buildozer init
-        
-        # Принудительно настраиваем пути к установленному SDK и NDK 25b
-        sed -i 's/android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
+
+        # Заменяем параметры на проверенные версии
         sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
+        sed -i 's/android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
         sed -i 's/android.archs = arm64-v8a, armeabi-v7a/android.archs = arm64-v8a/' buildozer.spec
         sed -i 's/requirements = python3,kivy/requirements = python3==3.11.5,kivy/' buildozer.spec
         
-        # Прописываем пути к SDK/NDK
-        echo "android.sdk_path = /usr/local/lib/android/sdk" >> buildozer.spec
-        echo "android.ndk_path = /usr/local/lib/android/sdk/ndk/25.2.9519653" >> buildozer.spec
-        echo "android.api = 33" >> buildozer.spec
-        echo "android.minapi = 24" >> buildozer.spec
-        echo "android.build_tools_version = 33.0.2" >> buildozer.spec
+        sed -i 's/# android.api = .*/android.api = 33/' buildozer.spec
+        sed -i 's/# android.minapi = .*/android.minapi = 24/' buildozer.spec
+        sed -i 's/# android.ndk = .*/android.ndk = 25b/' buildozer.spec
+        sed -i 's/# android.build_tools_version = .*/android.build_tools_version = 33.0.2/' buildozer.spec
+
+    - name: Pre-accept SDK Licenses for Buildozer
+      run: |
+        # Предсоздаем директорию SDK Buildozer и принимаем все лицензии
+        ANDROID_SDK_HOME="$HOME/.buildozer/android/platform/android-sdk"
+        mkdir -p "$ANDROID_SDK_HOME/licenses"
+        
+        echo -e "\n24833b2982365686222214314519807237389140\n89330d1709806eb19623011172f3679a22a4476e\n79322ba8426f5e9f5f6555b773c2378756410345" > "$ANDROID_SDK_HOME/licenses/android-sdk-license"
+        echo -e "\n84831b9409646a918e30573bab4c9c91346d8abd" > "$ANDROID_SDK_HOME/licenses/android-sdk-preview-license"
+        echo -e "\nd976narrow84570b5a2e9a706d3108447572d24c352630d7ede" > "$ANDROID_SDK_HOME/licenses/intel-android-sys-image-license"
 
     - name: Build APK
       run: |
-        buildozer -v android debug
+        # Используем 'yes' с оберткой Pipe, чтобы авто-соглашаться на новые пакеты SDK
+        yes | buildozer -v android debug || buildozer -v android debug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
