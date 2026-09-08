@@ -38,7 +38,6 @@ jobs:
         mkdir -p $HOME/.buildozer/android/platform
         wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip -O ndk.zip
         unzip -q ndk.zip -d $HOME/.buildozer/android/platform/
-        mv $HOME/.buildozer/android/platform/android-ndk-r25b $HOME/.buildozer/android/platform/android-ndk-r25b
         rm ndk.zip
 
     - name: Pre-install Android Command-Line Tools
