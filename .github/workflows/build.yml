@@ -27,17 +27,25 @@ jobs:
         python -m pip install --upgrade pip setuptools
         python -m pip install "cython<3.0.0" buildozer
 
+    - name: Accept Android SDK Licenses
+      run: |
+        mkdir -p ~/.android
+        touch ~/.android/repositories.cfg
+        # Автоматический прием всех лицензий Android SDK
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+
     - name: Configure buildozer.spec
       run: |
         if [ ! -f buildozer.spec ]; then
           buildozer init
         fi
-        # Лицензия и архитектура
+        # Принятие лицензий и базовые настройки
         sed -i 's/#android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
         sed -i 's/android.archs = arm64-v8a, armeabi-v7a/android.archs = arm64-v8a/' buildozer.spec
         
-        # Фиксация версий Python, NDK и API для стабильности
+        # Стабильные версии Python, API и NDK
         sed -i 's/requirements = python3,kivy/requirements = python3==3.11.5,kivy/' buildozer.spec
+        sed -i 's/# android.build_tools_version = .*/android.build_tools_version = 34.0.0/' buildozer.spec
         sed -i 's/# android.ndk = 25b/android.ndk = 25b/' buildozer.spec
         sed -i 's/# android.api = 33/android.api = 33/' buildozer.spec
 
