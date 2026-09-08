@@ -9,6 +9,11 @@ jobs:
   build:
     runs-on: ubuntu-22.04
 
+    # Сбрасываем системные переменные NDK GitHub Runner'а
+    env:
+      ANDROID_NDK_HOME: ""
+      ANDROID_NDK_LATEST_HOME: ""
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -43,19 +48,19 @@ jobs:
         rm -f buildozer.spec
         buildozer init
 
-        # Включаем максимальное логирование для диагностики
-        sed -i 's/log_level = 2/log_level = 2/' buildozer.spec
+        # Подробный лог
         sed -i 's/# log_level = 2/log_level = 2/' buildozer.spec
+        sed -i 's/log_level = 1/log_level = 2/' buildozer.spec
 
         # Лицензии и архитектура
         sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
         sed -i 's/android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
         sed -i 's/android.archs = arm64-v8a, armeabi-v7a/android.archs = arm64-v8a/' buildozer.spec
 
-        # Стабильная версия Python
+        # Зависимости Python
         sed -i 's/requirements = python3,kivy/requirements = python3==3.11.0,kivy/' buildozer.spec
 
-        # Фиксируем совместимые версии API и NDK (NDK 25b обязательно!)
+        # Настройки API и фиксирование NDK 25b
         sed -i 's/# android.api = .*/android.api = 33/' buildozer.spec
         sed -i 's/android.api = .*/android.api = 33/' buildozer.spec
         sed -i 's/# android.minapi = .*/android.minapi = 24/' buildozer.spec
@@ -84,6 +89,7 @@ jobs:
 
     - name: Build APK
       run: |
+        buildozer -v android clean
         buildozer -v android debug
 
     - name: Upload APK Artifact
