@@ -48,8 +48,8 @@ jobs:
         sed -i 's/android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
         sed -i 's/android.archs = arm64-v8a, armeabi-v7a/android.archs = arm64-v8a/' buildozer.spec
 
-        # Зависимости
-        sed -i 's/requirements = python3,kivy/requirements = python3,kivy/' buildozer.spec
+        # ФИКС: Явно фиксируем python3==3.11.0 вместо нестабильного python3.14
+        sed -i 's/requirements = python3,kivy/requirements = python3==3.11.0,kivy/' buildozer.spec
 
         # Настройки API и NDK
         sed -i 's/# android.api = .*/android.api = 33/' buildozer.spec
@@ -68,7 +68,7 @@ jobs:
         mv "$SDK_DIR/cmdline-tools/cmdline-tools" "$SDK_DIR/cmdline-tools/latest"
         rm commandlinetools.zip
 
-        # Создаем необходимый симлинк tools/bin/sdkmanager
+        # Создаем симлинк tools/bin/sdkmanager
         mkdir -p "$SDK_DIR/tools/bin"
         ln -sf "$SDK_DIR/cmdline-tools/latest/bin/sdkmanager" "$SDK_DIR/tools/bin/sdkmanager"
 
