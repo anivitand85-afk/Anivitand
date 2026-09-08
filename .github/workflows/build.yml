@@ -43,18 +43,25 @@ jobs:
         rm -f buildozer.spec
         buildozer init
 
+        # Включаем максимальное логирование для диагностики
+        sed -i 's/log_level = 2/log_level = 2/' buildozer.spec
+        sed -i 's/# log_level = 2/log_level = 2/' buildozer.spec
+
         # Лицензии и архитектура
         sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
         sed -i 's/android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
         sed -i 's/android.archs = arm64-v8a, armeabi-v7a/android.archs = arm64-v8a/' buildozer.spec
 
-        # ФИКС: Явно фиксируем python3==3.11.0 вместо нестабильного python3.14
+        # Стабильная версия Python
         sed -i 's/requirements = python3,kivy/requirements = python3==3.11.0,kivy/' buildozer.spec
 
-        # Настройки API и NDK
+        # Фиксируем совместимые версии API и NDK (NDK 25b обязательно!)
         sed -i 's/# android.api = .*/android.api = 33/' buildozer.spec
+        sed -i 's/android.api = .*/android.api = 33/' buildozer.spec
         sed -i 's/# android.minapi = .*/android.minapi = 24/' buildozer.spec
+        sed -i 's/android.minapi = .*/android.minapi = 24/' buildozer.spec
         sed -i 's/# android.ndk = .*/android.ndk = 25b/' buildozer.spec
+        sed -i 's/android.ndk = .*/android.ndk = 25b/' buildozer.spec
 
     - name: Prepare Android SDK structure
       run: |
@@ -68,11 +75,11 @@ jobs:
         mv "$SDK_DIR/cmdline-tools/cmdline-tools" "$SDK_DIR/cmdline-tools/latest"
         rm commandlinetools.zip
 
-        # Создаем симлинк tools/bin/sdkmanager
+        # Симлинк для sdkmanager
         mkdir -p "$SDK_DIR/tools/bin"
         ln -sf "$SDK_DIR/cmdline-tools/latest/bin/sdkmanager" "$SDK_DIR/tools/bin/sdkmanager"
 
-        # Автоматически принимаем лицензии Android SDK
+        # Принимаем лицензии
         yes | "$SDK_DIR/cmdline-tools/latest/bin/sdkmanager" --licenses || true
 
     - name: Build APK
