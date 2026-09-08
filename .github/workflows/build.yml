@@ -43,25 +43,23 @@ jobs:
         rm -f buildozer.spec
         buildozer init
 
-        # Разрешаем сборку и авто-принятие лицензий
         sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
         sed -i 's/android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
-        
-        # Сборка только под arm64
         sed -i 's/android.archs = arm64-v8a, armeabi-v7a/android.archs = arm64-v8a/' buildozer.spec
-        
-        # Зависимости
         sed -i 's/requirements = python3,kivy/requirements = python3,kivy/' buildozer.spec
-        
-        # Версии API и NDK
         sed -i 's/# android.api = .*/android.api = 33/' buildozer.spec
         sed -i 's/# android.minapi = .*/android.minapi = 24/' buildozer.spec
         sed -i 's/# android.ndk = .*/android.ndk = 25b/' buildozer.spec
 
-    - name: Build APK with Buildozer
+    - name: Pre-accept SDK Licenses
       run: |
-        # Используем yes для автоматического согласия со всеми лицензиями SDK/NDK
-        yes | buildozer -v android debug
+        mkdir -p ~/.buildozer/android/platform/android-sdk/licenses
+        printf "24833b2982365686222214314519807237389140\n89330d1709806eb19623011172f3679a22a4476e\n79322ba8426f5e9f5f6555b773c2378756410345" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+        printf "84831b9409646a918e30573bab4c9c91346d8abd" > ~/.buildozer/android/platform/android-sdk/licenses/android-sdk-preview-license"
+
+    - name: Build APK
+      run: |
+        buildozer -v android debug
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
