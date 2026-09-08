@@ -15,13 +15,14 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Fix permissions for non-root user
+    - name: Setup non-root user
       run: |
-        chown -R user:user .
+        id -u builduser &>/dev/null || useradd -m -s /bin/bash builduser
+        chown -R builduser:builduser .
 
     - name: Configure buildozer.spec
       run: |
-        su user -c "
+        su builduser -c "
           rm -f buildozer.spec
           buildozer init
 
@@ -36,7 +37,7 @@ jobs:
 
     - name: Build APK
       run: |
-        su user -c "yes | buildozer -v android debug"
+        su builduser -c "yes | buildozer -v android debug"
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
